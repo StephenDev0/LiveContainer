@@ -22,6 +22,10 @@ struct LCTabView: View {
     
     var body: some View {
         TabView {
+            LCSourcesView()
+                .tabItem {
+                    Label("lc.tabView.sources".loc, systemImage: "tray.and.arrow.down")
+                }
             LCAppListView(appDataFolderNames: $appDataFolderNames, tweakFolderNames: $tweakFolderNames)
                 .tabItem {
                     Label("lc.tabView.apps".loc, systemImage: "square.stack.3d.up.fill")
