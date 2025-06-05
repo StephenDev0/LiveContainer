@@ -139,7 +139,7 @@ struct LCSourcesView: View {
             .navigationTitle("lc.tabView.sources".loc)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { Task { if let new = await addSourceInput.open(), let new = new, !new.isEmpty { addSource(url: new) } } }) {
+                    Button(action: { Task { if let new = await addSourceInput.open(), !new.isEmpty { addSource(url: new) } } }) {
                         Image(systemName: "plus")
                     }
                 }
