@@ -32,6 +32,7 @@ struct AltStoreSource: Codable {
 
 struct AltStoreAppBanner: View {
     let app: AltStoreApp
+    @EnvironmentObject var model: SharedModel
 
     var body: some View {
         HStack {
@@ -66,20 +67,17 @@ struct AltStoreAppBanner: View {
                let dlUrl = URL(string: "livecontainer://install?url=\(encoded)") {
                 Button {
                     UIApplication.shared.open(dlUrl)
+                    model.selectedTab = 1
                 } label: {
                     Text("Download")
                         .bold()
                         .foregroundColor(.white)
-                        .lineLimit(1)
                         .frame(height: 32)
+                        .padding(.horizontal, 12)
                 }
                 .buttonStyle(BasicButtonStyle())
-                .padding()
-                .frame(idealWidth: 70)
-                .frame(height: 32)
-                .fixedSize()
                 .background(Capsule().fill(Color("FontColor")))
-                .clipShape(Capsule())
+                .padding()
             }
         }
         .padding()
