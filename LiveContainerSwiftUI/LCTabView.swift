@@ -74,7 +74,6 @@ struct LCTabView: View {
                 }
             }
         }
-        .environmentObject(DataManager.shared.model)
     }
     
     func closeDuplicatedWindow() {
