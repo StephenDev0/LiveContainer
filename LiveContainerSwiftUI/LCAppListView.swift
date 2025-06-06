@@ -96,6 +96,7 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                         }
                     }
                     .opacity(installprogressVisible ? 1 : 0)
+                    .frame(height: installprogressVisible ? nil : 0)
                     .onChange(of: installProgressPercentage) { newValue in
                         if newValue > uiInstallProgressPercentage {
                             withAnimation(.easeIn(duration: 0.3)) {

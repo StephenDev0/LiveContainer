@@ -198,12 +198,17 @@ struct LCSourcesView: View {
 
     @StateObject private var addSourceInput = InputHelper()
 
-    private let defaultSource = "https://raw.githubusercontent.com/LiveContainer/LiveContainer/main/apps.json"
 
     var body: some View {
         NavigationView {
             ScrollView {
                 LazyVStack(spacing: 12) {
+                    if sourceURLs.isEmpty {
+                        Text("Press the Plus Button to Add Sources.")
+                            .foregroundColor(.gray)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                    }
                     ForEach(sourceURLs, id: \.self) { url in
                         if let source = sources[url] {
                             let collapsed = collapsedSources.contains(url)
@@ -276,7 +281,7 @@ struct LCSourcesView: View {
     }
 
     private func loadSourceList() {
-        sourceURLs = UserDefaults.standard.stringArray(forKey: "LCSources") ?? [defaultSource]
+        sourceURLs = UserDefaults.standard.stringArray(forKey: "LCSources") ?? []
         for url in sourceURLs {
             loadCachedSource(url: url)
             fetchSource(url: url)
