@@ -15,24 +15,24 @@ struct AltStoreAppPermissions: Codable {
 }
 
 struct AltStoreApp: Codable, Identifiable {
-    var id: String { appID ?? bundleIdentifier }
-    let name: String
-    let bundleIdentifier: String
-    let developerName: String?
-    let subtitle: String?
-    let iconURL: String?
-    let tintColor: String?
-    let screenshotURLs: [String]?
-    let localizedDescription: String?
-    let appPermissions: AltStoreAppPermissions?
-    let versions: [AltStoreVersion]?
-    let version: String?
-    let versionDate: String?
-    let versionDescription: String?
-    let downloadURL: String?
-    let absoluteVersion: String?
-    let appID: String?
-    let size: Int?
+    var id: String { appID ?? bundleIdentifier ?? name }
+    var name: String
+    var bundleIdentifier: String?
+    var developerName: String?
+    var subtitle: String?
+    var iconURL: String?
+    var tintColor: String?
+    var screenshotURLs: [String]?
+    var localizedDescription: String?
+    var appPermissions: AltStoreAppPermissions?
+    var versions: [AltStoreVersion]?
+    var version: String?
+    var versionDate: String?
+    var versionDescription: String?
+    var downloadURL: String?
+    var absoluteVersion: String?
+    var appID: String?
+    var size: Int?
 
     var latestDownloadURL: String? {
         if let versions, let first = versions.first {
@@ -66,9 +66,14 @@ struct AltStoreSource: Decodable {
         if let appArray = try? container.decode([AltStoreApp].self, forKey: .apps) {
             apps = appArray
         } else if let appDict = try? container.decode([String: AltStoreApp].self, forKey: .apps) {
-            apps = Array(appDict.values)
+            apps = appDict.map { key, value in
+                var app = value
+                if app.appID == nil { app.appID = key }
+                if app.bundleIdentifier == nil { app.bundleIdentifier = key }
+                return app
+            }
         } else {
-            apps = []
+            throw DecodingError.dataCorruptedError(forKey: .apps, in: container, debugDescription: "Unsupported apps format")
         }
     }
 }
