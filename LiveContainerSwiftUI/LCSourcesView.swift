@@ -129,6 +129,7 @@ struct AltStoreSource: Decodable {
 
 struct AltStoreAppBanner: View {
     let app: AltStoreApp
+    var tintColor: Color? = nil
     @EnvironmentObject var model: SharedModel
 
     var body: some View {
@@ -181,7 +182,7 @@ struct AltStoreAppBanner: View {
         .frame(height: 88)
         .background(
             RoundedRectangle(cornerRadius: 22)
-                .fill(Color("AppBannerBG"))
+                .fill(tintColor ?? Color("AppBannerBG"))
         )
     }
 }
@@ -235,7 +236,7 @@ struct LCSourcesView: View {
 
                                 if !collapsed || !searchText.isEmpty {
                                     ForEach(source.apps.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }, id: \.id) { app in
-                                        AltStoreAppBanner(app: app)
+                                        AltStoreAppBanner(app: app, tintColor: sourceColor(source))
                                     }
                                 }
                             }
