@@ -8,6 +8,23 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+enum AppSortMode: Int, CaseIterable {
+    case favoritesFirst = 0
+    case nameAZ = 1
+    case nameZA = 2
+
+    var label: String {
+        switch self {
+        case .favoritesFirst:
+            return "Favorites First"
+        case .nameAZ:
+            return "Name A-Z"
+        case .nameZA:
+            return "Name Z-A"
+        }
+    }
+}
+
 struct AppReplaceOption : Hashable {
     var isReplace: Bool
     var nameOfFolderToInstall: String
@@ -53,7 +70,13 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
     @State var safariViewURL = URL(string: "https://google.com")!
 
     @State private var searchText = ""
-    
+    @AppStorage("LCAppSortMode") private var sortModeRaw: Int = AppSortMode.favoritesFirst.rawValue
+
+    private var sortMode: AppSortMode {
+        get { AppSortMode(rawValue: sortModeRaw) ?? .favoritesFirst }
+        set { sortModeRaw = newValue.rawValue }
+    }
+
     @State private var navigateTo : AnyView?
     @State private var isNavigationActive = false
     
@@ -65,6 +88,25 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
 
     private func appDisplayName(_ app: LCAppModel) -> String {
         app.appInfo.displayName() ?? ""
+    }
+
+    private func sortedApps(_ apps: [LCAppModel]) -> [LCAppModel] {
+        switch sortMode {
+        case .favoritesFirst:
+            return apps.sorted { lhs, rhs in
+                let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath ?? "")
+                let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath ?? "")
+                if lf == rf {
+                    return appDisplayName(lhs) < appDisplayName(rhs)
+                } else {
+                    return lf && !rf
+                }
+            }
+        case .nameAZ:
+            return apps.sorted { appDisplayName($0) < appDisplayName($1) }
+        case .nameZA:
+            return apps.sorted { appDisplayName($0) > appDisplayName($1) }
+        }
     }
 
     init(appDataFolderNames: Binding<[String]>, tweakFolderNames: Binding<[String]>) {
@@ -110,16 +152,7 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                 }
                 .zIndex(.infinity)
                 LazyVStack {
-                    ForEach(sharedModel.apps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }
-                        .sorted { lhs, rhs in
-                            let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath ?? "")
-                            let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath ?? "")
-                            if lf == rf {
-                                return appDisplayName(lhs) < appDisplayName(rhs)
-                            } else {
-                                return lf && !rf
-                            }
-                        }, id: \.self) { app in
+                    ForEach(sortedApps(sharedModel.apps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }), id: \.self) { app in
                         LCAppBanner(appModel: app, delegate: self, appDataFolders: $appDataFolderNames, tweakFolders: $tweakFolderNames)
                     }
                     .transition(.scale)
@@ -137,16 +170,7 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                                         .font(.system(.title2).bold())
                                     Spacer()
                                 }
-                                ForEach(sharedModel.hiddenApps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }
-                                    .sorted { lhs, rhs in
-                                        let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath ?? "")
-                                        let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath ?? "")
-                                        if lf == rf {
-                                            return appDisplayName(lhs) < appDisplayName(rhs)
-                                        } else {
-                                            return lf && !rf
-                                        }
-                                    }, id: \.self) { app in
+                                ForEach(sortedApps(sharedModel.hiddenApps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }), id: \.self) { app in
                                     LCAppBanner(appModel: app, delegate: self, appDataFolders: $appDataFolderNames, tweakFolders: $tweakFolderNames)
                                 }
                             }
@@ -166,16 +190,7 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                                     .font(.system(.title2).bold())
                                 Spacer()
                             }
-                            ForEach(sharedModel.hiddenApps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }
-                                .sorted { lhs, rhs in
-                                    let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath ?? "")
-                                    let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath ?? "")
-                                    if lf == rf {
-                                        return appDisplayName(lhs) < appDisplayName(rhs)
-                                    } else {
-                                        return lf && !rf
-                                    }
-                                }, id: \.self) { app in
+                            ForEach(sortedApps(sharedModel.hiddenApps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }), id: \.self) { app in
                                 if sharedModel.isHiddenAppUnlocked {
                                     LCAppBanner(appModel: app, delegate: self, appDataFolders: $appDataFolderNames, tweakFolders: $tweakFolderNames)
                                 } else {
@@ -245,6 +260,16 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                     Button("lc.appList.openLink".loc, systemImage: "link", action: {
                         Task { await onOpenWebViewTapped() }
                     })
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Picker(selection: $sortMode) {
+                        ForEach(AppSortMode.allCases, id: \.self) { mode in
+                            Text(mode.label).tag(mode)
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                    }
+                    .pickerStyle(.menu)
                 }
             }
 
