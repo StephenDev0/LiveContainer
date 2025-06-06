@@ -23,11 +23,14 @@ struct LCTabView: View {
     
     var body: some View {
         TabView(selection: $model.selectedTab) {
-            LCSourcesView()
-                .tabItem {
-                    Label("lc.tabView.sources".loc, systemImage: "tray.and.arrow.down")
-                }
-                .tag(0)
+            if DataManager.shared.model.multiLCStatus != 2 {
+                LCSourcesView()
+                    .tabItem {
+                        Label("lc.tabView.sources".loc, systemImage: "tray.and.arrow.down")
+                    }
+                    .tag(0)
+            }
+
             LCAppListView(appDataFolderNames: $appDataFolderNames, tweakFolderNames: $tweakFolderNames)
                 .tabItem {
                     Label("lc.tabView.apps".loc, systemImage: "square.stack.3d.up.fill")
@@ -73,6 +76,10 @@ struct LCTabView: View {
                     DataManager.shared.model.mainWindowOpened = false
                 }
             }
+        }
+        .onOpenURL { url in
+            model.pendingOpenURL = url
+            model.selectedTab = 1
         }
     }
     

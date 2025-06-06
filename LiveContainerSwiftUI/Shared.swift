@@ -63,11 +63,20 @@ class SharedModel: ObservableObject {
     @Published var enableMultipleWindow = false
 
     /// Currently selected tab index in ``LCTabView``
-    @Published var selectedTab = UserDefaults.standard.integer(forKey: "LCSelectedTab") {
+    @Published var selectedTab: Int = {
+        if UserDefaults.standard.object(forKey: "LCSelectedTab") != nil {
+            return UserDefaults.standard.integer(forKey: "LCSelectedTab")
+        } else {
+            return 1
+        }
+    }() {
         didSet {
             UserDefaults.standard.set(selectedTab, forKey: "LCSelectedTab")
         }
     }
+
+    /// URL passed in via openURL when ``LCTabView`` isn't active yet
+    @Published var pendingOpenURL: URL? = nil
     
     @Published var apps : [LCAppModel] = []
     @Published var hiddenApps : [LCAppModel] = []

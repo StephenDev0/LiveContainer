@@ -58,6 +58,7 @@ struct LCSelectContainerView : View{
             }
             .navigationTitle(Text("lc.container.selectUnused".loc))
             .navigationBarTitleDisplayMode(.inline)
+            .navigationViewStyle(StackNavigationViewStyle())
         }
         .onAppear() {
             loadUnusedContainers()

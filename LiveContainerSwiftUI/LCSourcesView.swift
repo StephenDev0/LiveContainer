@@ -250,6 +250,7 @@ struct LCSourcesView: View {
             .alert(isPresented: Binding<Bool>(get: { error != nil }, set: { _ in error = nil })) {
                 Alert(title: Text("Error"), message: Text(error ?? ""), dismissButton: .default(Text("OK")))
             }
+            .navigationViewStyle(StackNavigationViewStyle())
         }
     }
 

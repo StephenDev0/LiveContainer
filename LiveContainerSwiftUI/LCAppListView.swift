@@ -85,7 +85,7 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                             .labelsHidden()
                             .scaleEffect(y: 0.5)
                         if totalInstallCount > 1 {
-                            Text("\(currentInstallIndex) of \(totalInstallCount)")
+                            Text("\(currentInstallIndex) / \(totalInstallCount)")
                                 .font(.caption2.monospacedDigit())
                         }
                     }
@@ -176,6 +176,10 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
             .onAppear {
                 if !didAppear {
                     onAppear()
+                }
+                if let url = sharedModel.pendingOpenURL {
+                    handleURL(url: url)
+                    sharedModel.pendingOpenURL = nil
                 }
             }
             
@@ -300,6 +304,12 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
         .onOpenURL { url in
             handleURL(url: url)
         }
+        .onChange(of: sharedModel.pendingOpenURL) { newValue in
+            if let url = newValue {
+                handleURL(url: url)
+                sharedModel.pendingOpenURL = nil
+            }
+        }
 
     }
     
@@ -342,6 +352,7 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                     }
                 }
             }
+            .navigationViewStyle(StackNavigationViewStyle())
         }
     }
     

@@ -29,6 +29,7 @@ struct LCHelpView : View {
                     }
                 }
             }
+            .navigationViewStyle(StackNavigationViewStyle())
         }
     }
 }
