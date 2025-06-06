@@ -80,6 +80,17 @@ class SharedModel: ObservableObject {
     
     @Published var apps : [LCAppModel] = []
     @Published var hiddenApps : [LCAppModel] = []
+
+    @Published var favoriteApps: Set<String> = {
+        if let arr = UserDefaults.standard.stringArray(forKey: "LCFavoriteApps") {
+            return Set(arr)
+        }
+        return []
+    }() {
+        didSet {
+            UserDefaults.standard.set(Array(favoriteApps), forKey: "LCFavoriteApps")
+        }
+    }
     let isPhone: Bool = {
         UIDevice.current.userInterfaceIdiom == .phone
     }()

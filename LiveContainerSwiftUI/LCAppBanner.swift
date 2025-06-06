@@ -36,8 +36,12 @@ struct LCAppBanner : View {
     @AppStorage("dynamicColors") var dynamicColors = true
     @AppStorage("LCLaunchInMultitaskMode") var launchInMultitaskMode = false
     @State private var mainColor : Color
-    
+
     @EnvironmentObject private var sharedModel : SharedModel
+
+    private var isFavorite: Bool {
+        sharedModel.favoriteApps.contains(appInfo.relativeBundlePath)
+    }
     
     init(appModel: LCAppModel, delegate: LCAppBannerDelegate, appDataFolders: Binding<[String]>, tweakFolders: Binding<[String]>) {
         _appInfo = State(initialValue: appModel.appInfo)
@@ -145,7 +149,14 @@ struct LCAppBanner : View {
             })
             .clipShape(Capsule())
             .disabled(model.isAppRunning)
-            
+
+            Button(action: { toggleFavorite() }) {
+                Image(systemName: isFavorite ? "star.fill" : "star")
+                    .foregroundColor(isFavorite ? .yellow : Color("FontColor"))
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing)
+
         }
         .padding()
         .frame(height: 88)
@@ -297,6 +308,15 @@ struct LCAppBanner : View {
         } catch {
             errorInfo = error.localizedDescription
             errorShow = true
+        }
+    }
+
+    func toggleFavorite() {
+        let id = appInfo.relativeBundlePath!
+        if sharedModel.favoriteApps.contains(id) {
+            sharedModel.favoriteApps.remove(id)
+        } else {
+            sharedModel.favoriteApps.insert(id)
         }
     }
 

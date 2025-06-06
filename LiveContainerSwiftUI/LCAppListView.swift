@@ -110,7 +110,16 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                 }
                 .zIndex(.infinity)
                 LazyVStack {
-                    ForEach(sharedModel.apps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }, id: \.self) { app in
+                    ForEach(sharedModel.apps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }
+                        .sorted { lhs, rhs in
+                            let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath!)
+                            let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath!)
+                            if lf == rf {
+                                return appDisplayName(lhs) < appDisplayName(rhs)
+                            } else {
+                                return lf && !rf
+                            }
+                        }, id: \.self) { app in
                         LCAppBanner(appModel: app, delegate: self, appDataFolders: $appDataFolderNames, tweakFolders: $tweakFolderNames)
                     }
                     .transition(.scale)
@@ -128,7 +137,16 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                                         .font(.system(.title2).bold())
                                     Spacer()
                                 }
-                                ForEach(sharedModel.hiddenApps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }, id: \.self) { app in
+                                ForEach(sharedModel.hiddenApps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }
+                                    .sorted { lhs, rhs in
+                                        let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath!)
+                                        let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath!)
+                                        if lf == rf {
+                                            return appDisplayName(lhs) < appDisplayName(rhs)
+                                        } else {
+                                            return lf && !rf
+                                        }
+                                    }, id: \.self) { app in
                                     LCAppBanner(appModel: app, delegate: self, appDataFolders: $appDataFolderNames, tweakFolders: $tweakFolderNames)
                                 }
                             }
@@ -148,7 +166,16 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                                     .font(.system(.title2).bold())
                                 Spacer()
                             }
-                            ForEach(sharedModel.hiddenApps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }, id: \.self) { app in
+                            ForEach(sharedModel.hiddenApps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }
+                                .sorted { lhs, rhs in
+                                    let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath!)
+                                    let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath!)
+                                    if lf == rf {
+                                        return appDisplayName(lhs) < appDisplayName(rhs)
+                                    } else {
+                                        return lf && !rf
+                                    }
+                                }, id: \.self) { app in
                                 if sharedModel.isHiddenAppUnlocked {
                                     LCAppBanner(appModel: app, delegate: self, appDataFolders: $appDataFolderNames, tweakFolders: $tweakFolderNames)
                                 } else {
