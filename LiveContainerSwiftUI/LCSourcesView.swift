@@ -2,19 +2,37 @@ import SwiftUI
 
 struct AltStoreVersion: Codable {
     let version: String?
+    let date: String?
     let downloadURL: String?
+    let localizedDescription: String?
+    let size: Int?
+    let absoluteVersion: String?
+}
+
+struct AltStoreAppPermissions: Codable {
+    let entitlements: [String]?
+    let privacy: [String: String]?
 }
 
 struct AltStoreApp: Codable, Identifiable {
-    var id: String { bundleIdentifier }
+    var id: String { appID ?? bundleIdentifier }
     let name: String
     let bundleIdentifier: String
     let developerName: String?
     let subtitle: String?
     let iconURL: String?
+    let tintColor: String?
+    let screenshotURLs: [String]?
+    let localizedDescription: String?
+    let appPermissions: AltStoreAppPermissions?
     let versions: [AltStoreVersion]?
     let version: String?
+    let versionDate: String?
+    let versionDescription: String?
     let downloadURL: String?
+    let absoluteVersion: String?
+    let appID: String?
+    let size: Int?
 
     var latestDownloadURL: String? {
         if let versions, let first = versions.first {
@@ -24,10 +42,35 @@ struct AltStoreApp: Codable, Identifiable {
     }
 }
 
-struct AltStoreSource: Codable {
+struct AltStoreSource: Decodable {
     let name: String
     let identifier: String
+    let version: Int?
+    let apiVersion: String?
     let apps: [AltStoreApp]
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case identifier
+        case version
+        case apiVersion
+        case apps
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decode(String.self, forKey: .name)
+        identifier = try container.decode(String.self, forKey: .identifier)
+        version = try? container.decode(Int.self, forKey: .version)
+        apiVersion = try? container.decode(String.self, forKey: .apiVersion)
+        if let appArray = try? container.decode([AltStoreApp].self, forKey: .apps) {
+            apps = appArray
+        } else if let appDict = try? container.decode([String: AltStoreApp].self, forKey: .apps) {
+            apps = Array(appDict.values)
+        } else {
+            apps = []
+        }
+    }
 }
 
 struct AltStoreAppBanner: View {
@@ -210,6 +253,7 @@ struct LCSourcesView: View {
                 await MainActor.run {
                     if self.sources[url] == nil {
                         self.error = error.localizedDescription
+                        self.removeSource(url: url)
                     }
                     self.loadingSources.remove(url)
                 }
