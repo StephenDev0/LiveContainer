@@ -16,7 +16,7 @@ struct AltStoreAppPermissions: Codable {
 
 struct AltStoreApp: Codable, Identifiable {
     var id: String { appID ?? bundleIdentifier ?? name }
-    var name: String
+    var name: String = ""
     var bundleIdentifier: String?
     var developerName: String?
     var subtitle: String?
@@ -33,6 +33,52 @@ struct AltStoreApp: Codable, Identifiable {
     var absoluteVersion: String?
     var appID: String?
     var size: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case bundleIdentifier
+        case developerName
+        case subtitle
+        case iconURL
+        case tintColor
+        case screenshotURLs
+        case localizedDescription
+        case appPermissions
+        case versions
+        case version
+        case versionDate
+        case versionDescription
+        case downloadURL
+        case absoluteVersion
+        case appID
+        case size
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = (try? container.decode(String.self, forKey: .name)) ?? ""
+        bundleIdentifier = try? container.decode(String.self, forKey: .bundleIdentifier)
+        developerName = try? container.decode(String.self, forKey: .developerName)
+        subtitle = try? container.decode(String.self, forKey: .subtitle)
+        iconURL = try? container.decode(String.self, forKey: .iconURL)
+        tintColor = try? container.decode(String.self, forKey: .tintColor)
+        screenshotURLs = try? container.decode([String].self, forKey: .screenshotURLs)
+        localizedDescription = try? container.decode(String.self, forKey: .localizedDescription)
+        appPermissions = try? container.decode(AltStoreAppPermissions.self, forKey: .appPermissions)
+        versions = try? container.decode([AltStoreVersion].self, forKey: .versions)
+        version = try? container.decode(String.self, forKey: .version)
+        versionDate = try? container.decode(String.self, forKey: .versionDate)
+        versionDescription = try? container.decode(String.self, forKey: .versionDescription)
+        downloadURL = try? container.decode(String.self, forKey: .downloadURL)
+        absoluteVersion = try? container.decode(String.self, forKey: .absoluteVersion)
+        appID = try? container.decode(String.self, forKey: .appID)
+        if let intVal = try? container.decodeIfPresent(Int.self, forKey: .size) {
+            size = intVal
+        } else if let strVal = try? container.decodeIfPresent(String.self, forKey: .size),
+                  let intVal = Int(strVal) {
+            size = intVal
+        }
+    }
 
     var latestDownloadURL: String? {
         if let versions, let first = versions.first {
