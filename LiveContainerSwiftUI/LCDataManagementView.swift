@@ -339,7 +339,7 @@ struct LCDataManagementView : View {
         var filzaBundleName : String? = nil
         for app in sharedModel.apps {
             if app.appInfo.bundleIdentifier() == "com.tigisoftware.Filza" {
-                filzaBundleName = app.appInfo.relativeBundlePath!
+                filzaBundleName = app.appInfo.relativeBundlePath
             }
         }
         if let filzaBundleName {

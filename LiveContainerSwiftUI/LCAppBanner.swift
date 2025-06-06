@@ -36,8 +36,13 @@ struct LCAppBanner : View {
     @AppStorage("dynamicColors") var dynamicColors = true
     @AppStorage("LCLaunchInMultitaskMode") var launchInMultitaskMode = false
     @State private var mainColor : Color
-    
+
     @EnvironmentObject private var sharedModel : SharedModel
+
+    private var isFavorite: Bool {
+        guard let id = appInfo.relativeBundlePath else { return false }
+        return sharedModel.favoriteApps.contains(id)
+    }
     
     init(appModel: LCAppModel, delegate: LCAppBannerDelegate, appDataFolders: Binding<[String]>, tweakFolders: Binding<[String]>) {
         _appInfo = State(initialValue: appModel.appInfo)
@@ -145,7 +150,14 @@ struct LCAppBanner : View {
             })
             .clipShape(Capsule())
             .disabled(model.isAppRunning)
-            
+
+            Button(action: { toggleFavorite() }) {
+                Image(systemName: isFavorite ? "star.fill" : "star")
+                    .foregroundColor(isFavorite ? .yellow : Color("FontColor"))
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing)
+
         }
         .padding()
         .frame(height: 88)
@@ -300,6 +312,15 @@ struct LCAppBanner : View {
         }
     }
 
+    func toggleFavorite() {
+        guard let id = appInfo.relativeBundlePath else { return }
+        if sharedModel.favoriteApps.contains(id) {
+            sharedModel.favoriteApps.remove(id)
+        } else {
+            sharedModel.favoriteApps.insert(id)
+        }
+    }
+
     
     func openSettings() {
         delegate.openNavigationView(view: AnyView(LCAppSettingsView(model: model, appDataFolders: $appDataFolders, tweakFolders: $tweakFolders)))
@@ -354,12 +375,13 @@ struct LCAppBanner : View {
 
     
     func copyLaunchUrl() {
+        guard let bundleName = appInfo.relativeBundlePath else { return }
         if let fn = model.uiSelectedContainer?.folderName {
-            UIPasteboard.general.string = "livecontainer://livecontainer-launch?bundle-name=\(appInfo.relativeBundlePath!)&container-folder-name=\(fn)"
+            UIPasteboard.general.string = "livecontainer://livecontainer-launch?bundle-name=\(bundleName)&container-folder-name=\(fn)"
         } else {
-            UIPasteboard.general.string = "livecontainer://livecontainer-launch?bundle-name=\(appInfo.relativeBundlePath!)"
+            UIPasteboard.general.string = "livecontainer://livecontainer-launch?bundle-name=\(bundleName)"
         }
-        
+
     }
     
     func openSafariViewToCreateAppClip() {
