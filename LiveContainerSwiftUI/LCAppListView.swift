@@ -112,8 +112,8 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                 LazyVStack {
                     ForEach(sharedModel.apps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }
                         .sorted { lhs, rhs in
-                            let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath!)
-                            let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath!)
+                            let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath ?? "")
+                            let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath ?? "")
                             if lf == rf {
                                 return appDisplayName(lhs) < appDisplayName(rhs)
                             } else {
@@ -139,8 +139,8 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                                 }
                                 ForEach(sharedModel.hiddenApps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }
                                     .sorted { lhs, rhs in
-                                        let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath!)
-                                        let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath!)
+                                        let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath ?? "")
+                                        let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath ?? "")
                                         if lf == rf {
                                             return appDisplayName(lhs) < appDisplayName(rhs)
                                         } else {
@@ -168,8 +168,8 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                             }
                             ForEach(sharedModel.hiddenApps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }
                                 .sorted { lhs, rhs in
-                                    let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath!)
-                                    let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath!)
+                                    let lf = sharedModel.favoriteApps.contains(lhs.appInfo.relativeBundlePath ?? "")
+                                    let rf = sharedModel.favoriteApps.contains(rhs.appInfo.relativeBundlePath ?? "")
                                     if lf == rf {
                                         return appDisplayName(lhs) < appDisplayName(rhs)
                                     } else {
@@ -458,7 +458,9 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                 }
             }
             
-            UserDefaults.standard.setValue(appToLaunch.appInfo.relativeBundlePath!, forKey: "selected")
+            if let id = appToLaunch.appInfo.relativeBundlePath {
+                UserDefaults.standard.setValue(id, forKey: "selected")
+            }
             UserDefaults.standard.setValue(urlToOpen.url!.absoluteString, forKey: "launchAppUrlScheme")
             LCUtils.launchToGuestApp()
             

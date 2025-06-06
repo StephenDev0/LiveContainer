@@ -40,7 +40,8 @@ struct LCAppBanner : View {
     @EnvironmentObject private var sharedModel : SharedModel
 
     private var isFavorite: Bool {
-        sharedModel.favoriteApps.contains(appInfo.relativeBundlePath)
+        guard let id = appInfo.relativeBundlePath else { return false }
+        return sharedModel.favoriteApps.contains(id)
     }
     
     init(appModel: LCAppModel, delegate: LCAppBannerDelegate, appDataFolders: Binding<[String]>, tweakFolders: Binding<[String]>) {
@@ -312,7 +313,7 @@ struct LCAppBanner : View {
     }
 
     func toggleFavorite() {
-        let id = appInfo.relativeBundlePath!
+        guard let id = appInfo.relativeBundlePath else { return }
         if sharedModel.favoriteApps.contains(id) {
             sharedModel.favoriteApps.remove(id)
         } else {
@@ -374,12 +375,13 @@ struct LCAppBanner : View {
 
     
     func copyLaunchUrl() {
+        guard let bundleName = appInfo.relativeBundlePath else { return }
         if let fn = model.uiSelectedContainer?.folderName {
-            UIPasteboard.general.string = "livecontainer://livecontainer-launch?bundle-name=\(appInfo.relativeBundlePath!)&container-folder-name=\(fn)"
+            UIPasteboard.general.string = "livecontainer://livecontainer-launch?bundle-name=\(bundleName)&container-folder-name=\(fn)"
         } else {
-            UIPasteboard.general.string = "livecontainer://livecontainer-launch?bundle-name=\(appInfo.relativeBundlePath!)"
+            UIPasteboard.general.string = "livecontainer://livecontainer-launch?bundle-name=\(bundleName)"
         }
-        
+
     }
     
     func openSafariViewToCreateAppClip() {

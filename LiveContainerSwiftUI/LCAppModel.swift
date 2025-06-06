@@ -216,10 +216,12 @@ class LCAppModel: ObservableObject, Hashable {
                     runningLC = "livecontainer"
                 }
                 
-                let openURL = URL(string: "\(runningLC)://livecontainer-launch?bundle-name=\(self.appInfo.relativeBundlePath!)&container-folder-name=\(fn)")!
-                if await UIApplication.shared.canOpenURL(openURL) {
-                    await UIApplication.shared.open(openURL)
-                    return
+                if let bundleName = self.appInfo.relativeBundlePath,
+                   let url = URL(string: "\(runningLC)://livecontainer-launch?bundle-name=\(bundleName)&container-folder-name=\(fn)") {
+                    if await UIApplication.shared.canOpenURL(url) {
+                        await UIApplication.shared.open(url)
+                        return
+                    }
                 }
             }
             
