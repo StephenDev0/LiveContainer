@@ -93,6 +93,7 @@ struct AltStoreSource: Decodable {
     let identifier: String
     let version: Int?
     let apiVersion: String?
+    let tintColor: String?
     let apps: [AltStoreApp]
 
     enum CodingKeys: String, CodingKey {
@@ -101,6 +102,7 @@ struct AltStoreSource: Decodable {
         case version
         case apiVersion
         case apps
+        case tintColor
     }
 
     init(from decoder: Decoder) throws {
@@ -109,6 +111,7 @@ struct AltStoreSource: Decodable {
         identifier = try container.decode(String.self, forKey: .identifier)
         version = try? container.decode(Int.self, forKey: .version)
         apiVersion = try? container.decode(String.self, forKey: .apiVersion)
+        tintColor = try? container.decode(String.self, forKey: .tintColor)
         if let appArray = try? container.decode([AltStoreApp].self, forKey: .apps) {
             apps = appArray
         } else if let appDict = try? container.decode([String: AltStoreApp].self, forKey: .apps) {
@@ -189,6 +192,9 @@ struct LCSourcesView: View {
     @State private var loadingSources: Set<String> = []
     @State private var error: String?
 
+    @State private var searchText = ""
+    @State private var collapsedSources: Set<String> = []
+
     @StateObject private var addSourceInput = InputHelper()
 
     private let defaultSource = "https://raw.githubusercontent.com/LiveContainer/LiveContainer/main/apps.json"
@@ -199,10 +205,17 @@ struct LCSourcesView: View {
                 LazyVStack(spacing: 12) {
                     ForEach(sourceURLs, id: \.self) { url in
                         if let source = sources[url] {
+                            let collapsed = collapsedSources.contains(url)
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
-                                    Text(source.name)
-                                        .font(.system(.title2).bold())
+                                    Button(action: { toggleCollapse(url: url) }) {
+                                        HStack {
+                                            Image(systemName: collapsed ? "chevron.right" : "chevron.down")
+                                            Text(source.name)
+                                                .font(.system(.title2).bold())
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
                                     Spacer()
                                     Menu {
                                         Button(role: .destructive) {
@@ -215,9 +228,15 @@ struct LCSourcesView: View {
                                             .font(.title3)
                                     }
                                 }
+                                .padding(8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8).fill(sourceColor(source))
+                                )
 
-                                ForEach(source.apps) { app in
-                                    AltStoreAppBanner(app: app)
+                                if !collapsed || !searchText.isEmpty {
+                                    ForEach(source.apps.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }, id: \.id) { app in
+                                        AltStoreAppBanner(app: app)
+                                    }
                                 }
                             }
                         } else if loadingSources.contains(url) {
@@ -229,6 +248,7 @@ struct LCSourcesView: View {
                 .padding()
             }
             .navigationTitle("lc.tabView.sources".loc)
+            .searchable(text: $searchText)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { Task { if let new = await addSourceInput.open(), !new.isEmpty { addSource(url: new) } } }) {
@@ -329,5 +349,32 @@ struct LCSourcesView: View {
         let path = cachePath(for: url)
         try? FileManager.default.removeItem(at: path)
         saveSourceList()
+    }
+
+    private func toggleCollapse(url: String) {
+        if collapsedSources.contains(url) {
+            collapsedSources.remove(url)
+        } else {
+            collapsedSources.insert(url)
+        }
+    }
+
+    private func sourceColor(_ source: AltStoreSource) -> Color {
+        if let tint = source.tintColor, let c = Color(hex: tint) {
+            return c.opacity(0.2)
+        }
+        return Color("AppBannerBG")
+    }
+}
+
+extension Color {
+    init?(hex: String) {
+        var h = hex
+        if h.hasPrefix("#") { h.removeFirst() }
+        guard let value = Int(h, radix: 16) else { return nil }
+        let r = Double((value >> 16) & 0xFF) / 255.0
+        let g = Double((value >> 8) & 0xFF) / 255.0
+        let b = Double(value & 0xFF) / 255.0
+        self.init(red: r, green: g, blue: b)
     }
 }

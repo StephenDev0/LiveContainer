@@ -48,9 +48,11 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
     @StateObject private var jitAlert = YesNoHelper()
     
     @StateObject private var runWhenMultitaskAlert = YesNoHelper()
-    
+
     @State var safariViewOpened = false
     @State var safariViewURL = URL(string: "https://google.com")!
+
+    @State private var searchText = ""
     
     @State private var navigateTo : AnyView?
     @State private var isNavigationActive = false
@@ -60,6 +62,10 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
     @EnvironmentObject private var sharedModel : SharedModel
     @AppStorage("LCMultitaskMode", store: LCUtils.appGroupUserDefault) var multitaskMode: MultitaskMode = .virtualWindow
     @AppStorage("LCLaunchInMultitaskMode") var launchInMultitaskMode = false
+
+    private func appDisplayName(_ app: LCAppModel) -> String {
+        app.appInfo.displayName() ?? ""
+    }
 
     init(appDataFolderNames: Binding<[String]>, tweakFolderNames: Binding<[String]>) {
         _installOptions = State(initialValue: [])
@@ -103,7 +109,7 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                 }
                 .zIndex(.infinity)
                 LazyVStack {
-                    ForEach(sharedModel.apps, id: \.self) { app in
+                    ForEach(sharedModel.apps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }, id: \.self) { app in
                         LCAppBanner(appModel: app, delegate: self, appDataFolders: $appDataFolderNames, tweakFolders: $tweakFolderNames)
                     }
                     .transition(.scale)
@@ -121,7 +127,7 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                                         .font(.system(.title2).bold())
                                     Spacer()
                                 }
-                                ForEach(sharedModel.hiddenApps, id: \.self) { app in
+                                ForEach(sharedModel.hiddenApps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }, id: \.self) { app in
                                     LCAppBanner(appModel: app, delegate: self, appDataFolders: $appDataFolderNames, tweakFolders: $tweakFolderNames)
                                 }
                             }
@@ -141,7 +147,7 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                                     .font(.system(.title2).bold())
                                 Spacer()
                             }
-                            ForEach(sharedModel.hiddenApps, id: \.self) { app in
+                            ForEach(sharedModel.hiddenApps.filter { searchText.isEmpty || appDisplayName($0).localizedCaseInsensitiveContains(searchText) }, id: \.self) { app in
                                 if sharedModel.isHiddenAppUnlocked {
                                     LCAppBanner(appModel: app, delegate: self, appDataFolders: $appDataFolderNames, tweakFolders: $tweakFolderNames)
                                 } else {
@@ -184,6 +190,7 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
             }
             
             .navigationTitle("lc.appList.myApps".loc)
+            .searchable(text: $searchText)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     if sharedModel.multiLCStatus != 2 {
